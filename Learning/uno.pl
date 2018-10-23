@@ -1,0 +1,1 @@
+subSet(L,S):- append(_,L2,L),append(S,_,L2).
