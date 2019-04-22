@@ -6,6 +6,8 @@
 			% main("if ( x == 5 ) x = 6 ; else { x = 3 ; }").
 			% main("if ( x == 5 ) { x = 6 ; x = x + 5 ; } else { x = 3 ; }").
 			% main("for ( x = 0 ; x < 5 ; x = x + 1 ) { y = x ; }").
+			% main("while ( x > 0 ) { x = x + 1 ; }").
+			% main("do { x = x + 1 ; } while ( x > 0 ) ;").
 
 main(S):-
   split_string(S, " ", "", Tokens), parse(Tokens).
@@ -21,7 +23,10 @@ op_state(S, RET):-
 statement(S, Return):-
 	for_state(S, Return);
 	if_state(S, Return);
+	doWhile_state(S, Return);
+	while_state(S, Return);
 	assign_state(S, Return).
+	
 	
 
 if_state(S, RET):-
@@ -55,7 +60,29 @@ if_state_rest(S, RET):-
 
 	RET = S.
 
-doWhile_state(S, RET):- !.
+doWhile_state(S, RET):-
+	nl,
+	get_Head(S, Next, Rest), check_match(Next, "do"),
+	get_Head(Rest, Next2, Rest2), check_match(Next2, "{"), 
+	op_state(Rest2, Rest3),
+	get_Head(Rest3, Next4, Rest4), check_match(Next4, "}"), 
+	get_Head(Rest4, Next5, Rest5), check_match(Next5, "while"),
+	get_Head(Rest5, Next6, Rest6), check_match(Next6, "("),
+	check_cond(Rest6, Rest7),
+	get_Head(Rest7, Next8, Rest8), check_match(Next8, ")"),
+	get_Head(Rest8, Next9, Rest9), check_match(Next9, ";"),
+	RET = Rest9.
+
+while_state(S, RET):-
+	nl,
+	get_Head(S, Next, Rest), check_match(Next, "while"),
+	get_Head(Rest, Next2, Rest2), check_match(Next2, "("), 
+	check_cond(Rest2, Rest3),
+	get_Head(Rest3, Next4, Rest4), check_match(Next4, ")"), 
+	get_Head(Rest4, Next5, Rest5), check_match(Next5, "{"),
+	op_state(Rest5, Rest6),
+	get_Head(Rest6, Next7, Rest7), check_match(Next7, "}"),
+	RET = Rest7.
 
 for_state(S, RET):-
 	nl,
